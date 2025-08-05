@@ -102,7 +102,17 @@ impl TensorportConverter {
         let safetensor_files = model_index.get_files();
         println!("📂 Found {} safetensor files", safetensor_files.len());
         
-        // Initialize shard writer
+        // Check if we're using JAX pickle format
+        if matches!(self.output_format, OutputFormat::JaxPickle) {
+            return self.convert_to_jax_pickle(&model_index, &safetensor_files, config);
+        }
+        
+        // Check if we're using NumPy direct format
+        if matches!(self.output_format, OutputFormat::NumpyDirect) {
+            return self.convert_to_numpy_direct(&model_index, &safetensor_files, config);
+        }
+        
+        // Initialize shard writer for other formats
         let mut shard_writer = ShardWriter::new(
             &self.output_path,
             self.shard_size_gb,
@@ -196,6 +206,151 @@ impl TensorportConverter {
         }
         
         Ok(total)
+    }
+    
+    fn convert_to_numpy_direct(
+        &self,
+        model_index: &ModelIndex,
+        safetensor_files: &[String],
+        config: serde_json::Value,
+    ) -> TensorportResult<ConversionResult> {
+        use crate::formats::NumpyDirectWriter;
+        
+        println!("🎯 Converting to NumPy arrays (.npy files) for direct JAX loading!");
+        
+        // Initialize NumPy writer
+        let mut writer = NumpyDirectWriter::new(
+            &self.output_path,
+            self.shard_size_gb,
+        )?;
+        
+        // Count total tensors for progress
+        let total_tensors = self.count_total_tensors(model_index, safetensor_files)?;
+        
+        // Setup progress bar
+        let progress = ProgressBar::new(total_tensors as u64);
+        progress.set_style(
+            ProgressStyle::with_template(
+                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} tensors ({msg})"
+            ).map_err(|e| TensorportError::Template(e.to_string()))?
+            .progress_chars("#>-")
+        );
+        
+        let mut processed_tensors = 0usize;
+        
+        // Process each safetensor file
+        for file_name in safetensor_files {
+            let file_path = self.input_path.join(file_name);
+            let file_size_gb = file_path.metadata()?.len() as f64 / (1024.0 * 1024.0 * 1024.0);
+            println!("\n📁 Processing file: {} ({:.2}GB)", file_name, file_size_gb);
+            progress.set_message(format!("Processing {}", file_name));
+            
+            // Open safetensor file
+            let reader = SafetensorsReader::new(&file_path)?;
+            
+            // Get tensors for this file
+            let tensor_names = model_index.get_tensors_for_file(file_name);
+            
+            // Process each tensor
+            for tensor_name in tensor_names {
+                // Read and convert tensor
+                let tensor = reader.read_tensor(tensor_name, &self.precision)?;
+                
+                // Add to NumPy writer
+                writer.add_tensor(tensor)?;
+                
+                processed_tensors += 1;
+                progress.inc(1);
+            }
+        }
+        
+        progress.finish_with_message("Finalizing NumPy arrays...");
+        
+        // Finalize the NumPy conversion
+        writer.finalize(config)?;
+        
+        // Return conversion result
+        Ok(ConversionResult {
+            output_path: self.output_path.clone(),
+            total_params: processed_tensors as u64,
+            shard_count: 0,
+            total_size_gb: 0.0,
+            manifest_path: self.output_path.join("manifest.json"),
+        })
+    }
+    
+    fn convert_to_jax_pickle(
+        &self,
+        model_index: &ModelIndex,
+        safetensor_files: &[String],
+        config: serde_json::Value,
+    ) -> TensorportResult<ConversionResult> {
+        use crate::formats::JaxPickleWriter;
+        use indicatif::{ProgressBar, ProgressStyle};
+        
+        println!("🎯 Converting directly to JAX pickle format (no Python needed!)");
+        
+        // Initialize JAX pickle writer
+        let mut writer = JaxPickleWriter::new(
+            &self.output_path,
+            self.precision.clone(),
+            self.shard_size_gb,
+        )?;
+        
+        // Count total tensors for progress
+        let total_tensors = self.count_total_tensors(model_index, safetensor_files)?;
+        
+        // Setup progress bar
+        let progress = ProgressBar::new(total_tensors as u64);
+        progress.set_style(
+            ProgressStyle::with_template(
+                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} tensors ({msg})"
+            ).map_err(|e| TensorportError::Template(e.to_string()))?
+            .progress_chars("#>-")
+        );
+        
+        let mut processed_tensors = 0usize;
+        
+        // Process each safetensor file
+        for file_name in safetensor_files {
+            let file_path = self.input_path.join(file_name);
+            let file_size_gb = file_path.metadata()?.len() as f64 / (1024.0 * 1024.0 * 1024.0);
+            println!("\n📁 Processing file: {} ({:.2}GB)", file_name, file_size_gb);
+            progress.set_message(format!("Processing {}", file_name));
+            
+            // Open safetensor file
+            let reader = SafetensorsReader::new(&file_path)?;
+            
+            // Get tensors for this file
+            let tensor_names = model_index.get_tensors_for_file(file_name);
+            println!("   Found {} tensors in this file", tensor_names.len());
+            
+            // Process each tensor
+            for tensor_name in tensor_names {
+                // Read and convert tensor
+                let tensor = reader.read_tensor(tensor_name, &self.precision)?;
+                
+                // Add to JAX pickle writer
+                writer.add_tensor(tensor)?;
+                
+                processed_tensors += 1;
+                progress.inc(1);
+            }
+        }
+        
+        progress.finish_with_message("Finalizing JAX pickle shards...");
+        
+        // Finalize the JAX pickle conversion
+        writer.finalize(config)?;
+        
+        // Return conversion result
+        Ok(ConversionResult {
+            output_path: self.output_path.clone(),
+            total_params: processed_tensors as u64,
+            shard_count: 0, // Will be updated by writer
+            total_size_gb: 0.0, // Will be calculated
+            manifest_path: self.output_path.join("manifest.json"),
+        })
     }
 }
 

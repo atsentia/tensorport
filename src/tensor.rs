@@ -174,7 +174,18 @@ impl Tensor {
     }
     
     pub fn parameter_count(&self) -> usize {
-        self.shape.iter().product()
+        let base_count: usize = self.shape.iter().product();
+        
+        // For MXFP4 quantized tensors (uint8 blocks), each element packs 2 4-bit weights
+        // These are identified by having "_blocks" in the name and uint8 dtype
+        if self.name.contains("_blocks") {
+            if let TensorData::Uint8(_) = &self.data {
+                // Each uint8 block element contains 2 packed 4-bit weights
+                return base_count * 2;
+            }
+        }
+        
+        base_count
     }
 }
 

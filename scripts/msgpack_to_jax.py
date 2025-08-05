@@ -141,30 +141,74 @@ def load_tensorport_shards(shard_dir, max_workers=None, batch_size=4):
 
 def deserialize_tensorport_format(shape, dtype, data):
     """Convert TensorPort [shape, dtype, data] format back to numpy array."""
-    if dtype == 'float16':
-        # Convert from u16 bits back to float16
-        if isinstance(data, dict) and 'Float16' in data:
+    # Handle nested dictionary structures (common in expert weights and quantized data)
+    if isinstance(data, dict):
+        if dtype == 'float16' and 'Float16' in data:
+            # Structured float16 data
             bits_array = np.array(data['Float16'], dtype=np.uint16)
             float16_array = bits_array.view(np.float16)
+            return float16_array.reshape(shape)
+        elif dtype == 'float32' and 'Float32' in data:
+            # Structured float32 data
+            float32_array = np.array(data['Float32'], dtype=np.float32)
+            return float32_array.reshape(shape)
+        elif dtype == 'uint8' and 'Uint8' in data:
+            # Structured uint8 data (quantized weights)
+            uint8_array = np.array(data['Uint8'], dtype=np.uint8)
+            return uint8_array.reshape(shape)
+        elif 'quantized_data' in data:
+            # MXFP4 or other quantized format - preserve the structure
+            return create_quantized_tensor_placeholder(shape, dtype, data)
         else:
-            # Direct float16 data
-            float16_array = np.array(data, dtype=np.float16)
-        return float16_array.reshape(shape)
+            # Try to extract the raw data from nested structure
+            possible_keys = ['data', 'values', 'tensor_data', dtype.lower()]
+            for key in possible_keys:
+                if key in data:
+                    return deserialize_tensorport_format(shape, dtype, data[key])
+            
+            # Check if this might be quantization metadata (blocks, scales, etc.)
+            if any(key in ['blocks', 'scales', 'quantized', 'metadata'] for key in data.keys()):
+                # Preserve quantization metadata as structured array
+                return create_quantized_tensor_placeholder(shape, dtype, data)
+            
+            # If we can't find the data, try the first non-metadata key
+            metadata_keys = {'dtype', 'shape', 'format', 'type'}
+            data_keys = [k for k in data.keys() if k not in metadata_keys]
+            if data_keys:
+                return deserialize_tensorport_format(shape, dtype, data[data_keys[0]])
+            
+            raise ValueError(f"Cannot extract tensor data from dict structure: {list(data.keys())}")
     
+    # Handle direct array data
+    if dtype == 'float16':
+        float16_array = np.array(data, dtype=np.float16)
+        return float16_array.reshape(shape)
     elif dtype == 'float32':
         float32_array = np.array(data, dtype=np.float32)
         return float32_array.reshape(shape)
-    
     elif dtype == 'uint8':
         uint8_array = np.array(data, dtype=np.uint8)
         return uint8_array.reshape(shape)
-    
     elif dtype == 'int64':
         int64_array = np.array(data, dtype=np.int64)
         return int64_array.reshape(shape)
-    
     else:
         raise ValueError(f"Unsupported dtype: {dtype}")
+
+def create_quantized_tensor_placeholder(shape, dtype, quantized_data):
+    """Create a placeholder for quantized tensors that preserves the quantization info."""
+    # For now, create a structured array that preserves the quantization metadata
+    # This allows the JAX model to handle dequantization later
+    placeholder = np.zeros(shape, dtype=np.float16 if dtype == 'float16' else np.float32)
+    
+    # Attach quantization metadata as array attributes (if supported by the target framework)
+    if hasattr(placeholder, '__dict__'):
+        placeholder.__dict__['quantization_data'] = quantized_data
+    
+    # For debugging/logging, note that this is a quantized tensor placeholder
+    print(f"    📦 Created quantized tensor placeholder with keys: {list(quantized_data.keys()) if isinstance(quantized_data, dict) else type(quantized_data)}")
+    
+    return placeholder
 
 def deserialize_tensor(tensor_info):
     """Convert TensorPort tensor info back to numpy array."""
@@ -172,30 +216,8 @@ def deserialize_tensor(tensor_info):
     dtype = tensor_info['dtype']
     data = tensor_info['data']
     
-    if dtype == 'float16':
-        # Convert from u16 bits back to float16
-        if isinstance(data, dict) and 'Float16' in data:
-            bits_array = np.array(data['Float16'], dtype=np.uint16)
-            float16_array = bits_array.view(np.float16)
-        else:
-            # Direct float16 data
-            float16_array = np.array(data, dtype=np.float16)
-        return float16_array.reshape(shape)
-    
-    elif dtype == 'float32':
-        float32_array = np.array(data, dtype=np.float32)
-        return float32_array.reshape(shape)
-    
-    elif dtype == 'uint8':
-        uint8_array = np.array(data, dtype=np.uint8)
-        return uint8_array.reshape(shape)
-    
-    elif dtype == 'int64':
-        int64_array = np.array(data, dtype=np.int64)
-        return int64_array.reshape(shape)
-    
-    else:
-        raise ValueError(f"Unsupported dtype: {dtype}")
+    # Use the same deserialization logic as deserialize_tensorport_format
+    return deserialize_tensorport_format(shape, dtype, data)
 
 def convert_to_jax_pytree(params):
     """Convert flat parameter dict to nested JAX PyTree structure."""

@@ -21,6 +21,7 @@ rayon = "1.8"
 byteorder = "1.5"
 rmp-serde = "1.1"
 half = "2.3"
+serde-pickle = "1.1"
 env_logger = "0.10"
 num_cpus = "1.16"
 
