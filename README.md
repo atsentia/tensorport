@@ -1,15 +1,16 @@
 # TensorPort 🚀
 
-Fast, memory-efficient tensor format conversion with custom bfloat16 support. Convert PyTorch safetensors models to JAX-compatible sharded formats.
+Fast, memory-efficient conversion from Safetensors to JAX-compatible formats with MXFP4 quantization support.
 
 ## Features
 
-- ⚡ **Fast Conversion**: Written in Rust for maximum performance
+- ⚡ **Direct Rust → JAX**: Convert directly to NumPy arrays (.npy) that JAX can load natively
+- 🎯 **MXFP4 Support**: Correctly handles 4-bit quantized models (21.5B params for GPT-OSS-20B)
 - 🧠 **Custom bfloat16 Support**: Handles bfloat16 tensors that standard libraries can't read
 - 💾 **Memory Efficient**: Streaming conversion without loading entire models into memory
-- 📦 **Smart Sharding**: Automatically splits large models into Git LFS-compatible chunks
-- 🔍 **Verification**: Built-in integrity checking for converted models
-- 🎯 **Precision Control**: Choose between float16 and float32 output precision
+- 📦 **Smart Sharding**: Automatically splits large models into Git LFS-compatible chunks (<2GB)
+- 🔄 **Resume Capability**: Continue interrupted conversions with --resume flag
+- 🎯 **Multiple Formats**: NumPy direct, MessagePack, or JAX pickle output
 
 ## Installation
 
@@ -27,40 +28,50 @@ cargo build --release
 
 ## Usage
 
-### Convert a Model
+### Convert to NumPy for JAX (Recommended)
 
 ```bash
 tensorport convert \
     --input path/to/safetensors/model \
     --output path/to/output/directory \
+    --format numpy-direct \
     --shard-size 1.8 \
     --precision float16
 ```
 
-### Verify Conversion
+### Loading in JAX
 
-```bash
-tensorport verify --model path/to/converted/model --verbose
+```python
+import jax.numpy as jnp
+import json
+
+# Load manifest
+with open('output/manifest.json') as f:
+    manifest = json.load(f)
+
+# Load a tensor directly
+tensor = jnp.load('output/shard_000/tensor_name.npy')
 ```
 
 ## Options
 
-- `--shard-size`: Maximum size per shard in GB (default: 1.8 for Git LFS compatibility)
-- `--precision`: Target precision (`float16` or `float32`, default: `float16`)
+- `--format`: Output format (`numpy-direct`, `msgpack`, `jax-pickle`)
+- `--shard-size`: Maximum size per shard in GB (default: 1.8 for Git LFS)
+- `--precision`: Target precision (`float16` or `float32`)
+- `--resume`: Resume interrupted conversion
 - `--workers`: Number of parallel workers (default: CPU count)
-- `--skip-verify`: Skip verification after conversion
 
 ## Supported Formats
 
 **Input:**
 - Safetensors format with model.safetensors.index.json
 - All tensor types: BF16 (bfloat16), F32, F16, U8, I64
-- MXFP4 quantized MoE expert weights (as U8)
+- MXFP4 quantized weights (4-bit packed in U8)
 
-**Output:**
-- MessagePack sharded format optimized for JAX
-- Configurable precision (float16/float32)
-- JSON manifest with metadata
+**Output Formats:**
+- **numpy-direct**: NumPy .npy files - JAX loads directly with `jnp.load()`
+- **msgpack**: MessagePack sharded format
+- **jax-pickle**: Direct pickle format (slower for large models)
 
 ## Why TensorPort?
 
@@ -89,17 +100,21 @@ TensorPort is designed for large-scale model conversion:
 
 ## Examples
 
-### Converting GPT-OSS-20B
+### Converting GPT-OSS-20B (MXFP4 Quantized)
 
 ```bash
-# Convert the full 21B parameter model
-tensorport convert \
+# Convert the full 21.5B parameter model
+./target/release/tensorport convert \
     --input models/gpt-oss-20b \
     --output models/gpt-oss-20b-jax \
+    --format numpy-direct \
     --precision float16
 
-# Verify the conversion
-tensorport verify --model models/gpt-oss-20b-jax --verbose
+# Output:
+# ✅ NumPy array conversion complete!
+#    Total shards: 8
+#    Total parameters: 21.51B
+#    Output: models/gpt-oss-20b-jax
 ```
 
 ### Custom Shard Size
