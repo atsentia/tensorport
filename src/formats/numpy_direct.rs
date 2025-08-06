@@ -1,9 +1,8 @@
-use crate::error::{TensorportError, TensorportResult};
+use crate::error::TensorportResult;
 use crate::tensor::{Tensor, TensorData};
 use std::fs::{File, create_dir_all};
 use std::io::{Write, BufWriter};
 use std::path::PathBuf;
-use std::collections::HashMap;
 use byteorder::{LittleEndian, WriteBytesExt};
 
 /// Direct NumPy array writer - writes .npy files that JAX can load directly
