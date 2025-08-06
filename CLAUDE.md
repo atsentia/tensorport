@@ -38,26 +38,34 @@
    - Modal deployment instructions
    - Executive summary and project status docs
 
-### 📋 Latest Addition
+### 📋 Latest Additions
 
-**Jupyter Notebook for Model Download** (`download_gpt_oss_20b.ipynb`)
+**1. Model Download Notebook** (`download_gpt_oss_20b.ipynb`)
 - Downloads GPT-OSS-20B from Hugging Face
 - Verifies MXFP4 quantization format
 - Ready for Modal.com notebook environment
-- Prepares model for TensorPort conversion
+- Successfully downloaded to `/mnt/example-runs-vol/gpt-oss-20b`
+
+**2. Conversion and Testing Notebook** (`convert_and_test_gpt_oss_20b.ipynb`)
+- Builds TensorPort from source (includes Rust installation)
+- Converts GPT-OSS-20B from safetensors to JAX format
+- Tests basic inference with embedding lookups
+- Benchmarks performance and memory usage
+- Provides baseline metrics for GPU optimization
 
 ### 🚀 Next Steps
 
-After running the download notebook on Modal.com:
+With model downloaded and conversion notebook ready:
 
-1. **Convert downloaded model to JAX format**
-   - Use TensorPort to convert safetensors to NumPy arrays
-   - Verify conversion with existing test scripts
+1. **Run full JAX inference pipeline**
+   - Complete model architecture implementation
+   - Add text generation capabilities
+   - Integrate MXFP4 quantization
 
-2. **Create inference benchmark notebooks**
-   - Manual Jupyter notebooks for Modal.com
-   - JAX inference implementation
-   - PyTorch inference for comparison
+2. **Create PyTorch comparison benchmark**
+   - Load original model in PyTorch
+   - Run identical prompts for fair comparison
+   - Measure memory usage and throughput differences
    - Performance metrics collection
 
 3. **Complete JAX-MXFP4 library**
