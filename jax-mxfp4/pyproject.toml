@@ -1,0 +1,108 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jax-mxfp4"
+version = "0.1.0"
+description = "High-performance 4-bit quantization library for JAX"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Atsentia Team", email = "engineering@atsentia.com"},
+]
+maintainers = [
+    {name = "Atsentia Team", email = "engineering@atsentia.com"},
+]
+keywords = [
+    "jax",
+    "quantization",
+    "4-bit",
+    "mxfp4",
+    "deep-learning",
+    "machine-learning",
+    "neural-networks",
+    "compression",
+    "llm",
+    "transformers",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "jax>=0.4.20",
+    "jaxlib>=0.4.20",
+    "numpy>=1.21.0",
+    "flax>=0.7.0",
+    "optax>=0.1.7",
+    "chex>=0.1.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "isort>=5.12",
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+]
+triton = [
+    "triton>=2.0",
+    "jax-triton>=0.1.4",
+]
+tpu = [
+    "jax[tpu]>=0.4.20",
+]
+cuda = [
+    "jax[cuda12]>=0.4.20",
+]
+benchmarks = [
+    "pandas>=1.5",
+    "matplotlib>=3.5",
+    "seaborn>=0.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/atsentia/jax-mxfp4"
+Documentation = "https://jax-mxfp4.readthedocs.io"
+Repository = "https://github.com/atsentia/jax-mxfp4"
+Issues = "https://github.com/atsentia/jax-mxfp4/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["jax_mxfp4*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py38", "py39", "py310", "py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --cov=jax_mxfp4 --cov-report=term-missing"

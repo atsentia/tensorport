@@ -177,6 +177,33 @@ TensorPort consists of several key modules:
 - **`converter`**: Main orchestration with progress tracking
 - **`verify`**: Integrity verification for converted models
 
+## JAX-MXFP4 Library
+
+TensorPort now includes **JAX-MXFP4**, a high-performance 4-bit quantization library for JAX:
+
+### Features
+- 🎯 **MXFP4 Quantization**: 4-bit with shared exponents (75% compression)
+- ⚡ **Optimized Kernels**: Custom Pallas/Triton kernels for GPUs
+- 🧠 **Flax Integration**: Drop-in replacement layers for transformers
+- 📊 **QAT Support**: Quantization-aware training utilities
+- 🔧 **Hardware Optimized**: Native FP4 on B100/B200, custom kernels for others
+
+### Quick Start
+```python
+from jax_mxfp4 import quantize_to_mxfp4, MXFP4Linear
+import jax.numpy as jnp
+
+# Quantize weights
+weights = jnp.ones((1024, 768))
+packed, scales = quantize_to_mxfp4(weights, block_size=32)
+
+# Use quantized layers
+layer = MXFP4Linear(features=768, block_size=32)
+output = layer(input_tensor)
+```
+
+See `jax-mxfp4/` directory for full documentation and examples.
+
 ## License
 
 MIT License - see LICENSE file for details.
