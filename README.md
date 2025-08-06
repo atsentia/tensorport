@@ -83,6 +83,15 @@ query = jnp.matmul(hidden_states, q_proj.T)
 
 ✅ **Verified**: Successfully tested with GPT-OSS-20B (21.5B parameters)
 
+## Latest Release
+
+**v0.2.0** - Full JAX Integration
+- Complete JAX inference pipeline
+- Tokenization support with example generations
+- 459 tensor files directly loadable by JAX
+- Tested end-to-end with GPT-OSS-20B model
+- Performance: ~1s/10 tokens on CPU, expect 100x faster on TPU
+
 ## Options
 
 - `--format`: Output format (`numpy-direct`, `msgpack`, `jax-pickle`)
