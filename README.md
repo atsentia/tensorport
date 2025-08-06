@@ -204,6 +204,13 @@ output = layer(input_tensor)
 
 See `jax-mxfp4/` directory for full documentation and examples.
 
+### Model Download
+Use `download_gpt_oss_20b.ipynb` to download the GPT-OSS-20B model from Hugging Face. This notebook:
+- Downloads the official `openai/gpt-oss-20b` model (~13GB)
+- Verifies MXFP4 quantization format
+- Works with Modal.com notebooks and volumes
+- Prepares model for TensorPort conversion
+
 ## License
 
 MIT License - see LICENSE file for details.
