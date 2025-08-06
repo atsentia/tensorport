@@ -25,19 +25,20 @@ from .kernels import (
     get_optimized_kernel,
 )
 
-from .model import (
-    MXFP4Model,
-    MXFP4Config,
-    convert_model_to_mxfp4,
-    load_mxfp4_weights,
-    save_mxfp4_weights,
-)
+# Model and training modules are planned for future releases
+# from .model import (
+#     MXFP4Model,
+#     MXFP4Config,
+#     convert_model_to_mxfp4,
+#     load_mxfp4_weights,
+#     save_mxfp4_weights,
+# )
 
-from .training import (
-    MXFP4Trainer,
-    create_mxfp4_optimizer,
-    quantization_aware_training,
-)
+# from .training import (
+#     MXFP4Trainer,
+#     create_mxfp4_optimizer,
+#     quantization_aware_training,
+# )
 
 __version__ = "0.1.0"
 
@@ -59,14 +60,14 @@ __all__ = [
     "fused_mxfp4_gelu",
     "fused_mxfp4_layernorm",
     "get_optimized_kernel",
-    # Model
-    "MXFP4Model",
-    "MXFP4Config",
-    "convert_model_to_mxfp4",
-    "load_mxfp4_weights",
-    "save_mxfp4_weights",
-    # Training
-    "MXFP4Trainer",
-    "create_mxfp4_optimizer",
-    "quantization_aware_training",
+    # Model - commented out until implemented
+    # "MXFP4Model",
+    # "MXFP4Config",
+    # "convert_model_to_mxfp4",
+    # "load_mxfp4_weights",
+    # "save_mxfp4_weights",
+    # Training - commented out until implemented
+    # "MXFP4Trainer",
+    # "create_mxfp4_optimizer",
+    # "quantization_aware_training",
 ]

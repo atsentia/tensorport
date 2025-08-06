@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+jax_mxfp4/__init__.py
+jax_mxfp4/kernels.py
+jax_mxfp4/layers.py
+jax_mxfp4/quantize.py
+jax_mxfp4.egg-info/PKG-INFO
+jax_mxfp4.egg-info/SOURCES.txt
+jax_mxfp4.egg-info/dependency_links.txt
+jax_mxfp4.egg-info/requires.txt
+jax_mxfp4.egg-info/top_level.txt
