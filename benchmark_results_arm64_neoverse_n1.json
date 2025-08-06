@@ -1,0 +1,123 @@
+{
+  "system_info": {
+    "timestamp": "2025-08-06T20:37:55.491786",
+    "platform": {
+      "system": "Linux",
+      "release": "6.8.0-60-generic",
+      "machine": "aarch64",
+      "processor": "aarch64",
+      "architecture": [
+        "64bit",
+        "ELF"
+      ],
+      "python_version": "3.12.3"
+    },
+    "cpu": {
+      "physical_cores": 8,
+      "logical_cores": 8,
+      "frequency": null,
+      "model": "ARM Neoverse-N1",
+      "architecture": "aarch64"
+    },
+    "memory": {
+      "total_gb": 15.21,
+      "available_gb": 14.45,
+      "percent_used": 5.0
+    }
+  },
+  "tensorport_operations": [
+    {
+      "operation": "version_check",
+      "duration_ms": 3.94,
+      "output": "tensorport 0.1.0"
+    },
+    {
+      "operation": "help_display",
+      "duration_ms": 2.12,
+      "lines_output": 12
+    },
+    {
+      "operation": "manifest_load",
+      "duration_ms": 1.83,
+      "tensor_count": 459
+    },
+    {
+      "operation": "numpy_file_scan",
+      "file_count": 459,
+      "total_size_mb": 13123.82
+    }
+  ],
+  "memory_benchmark": {
+    "initial_memory_mb": 13.5,
+    "tests": [
+      {
+        "test_size_mb": 10,
+        "baseline_mb": 31.16,
+        "after_alloc_mb": 41.36,
+        "after_process_mb": 46.29,
+        "after_cleanup_mb": 36.36,
+        "peak_usage_mb": 15.12
+      },
+      {
+        "test_size_mb": 50,
+        "baseline_mb": 36.36,
+        "after_alloc_mb": 86.36,
+        "after_process_mb": 111.3,
+        "after_cleanup_mb": 36.36,
+        "peak_usage_mb": 74.95
+      },
+      {
+        "test_size_mb": 100,
+        "baseline_mb": 36.36,
+        "after_alloc_mb": 136.36,
+        "after_process_mb": 186.3,
+        "after_cleanup_mb": 36.36,
+        "peak_usage_mb": 149.95
+      },
+      {
+        "test_size_mb": 200,
+        "baseline_mb": 36.36,
+        "after_alloc_mb": 236.37,
+        "after_process_mb": 336.31,
+        "after_cleanup_mb": 36.36,
+        "peak_usage_mb": 299.95
+      }
+    ]
+  },
+  "io_benchmark": [
+    {
+      "size_mb": 1,
+      "write_ms": 0.98,
+      "read_ms": 0.57,
+      "write_throughput_mbps": 1017.25,
+      "read_throughput_mbps": 1753.76
+    },
+    {
+      "size_mb": 10,
+      "write_ms": 6.35,
+      "read_ms": 2.33,
+      "write_throughput_mbps": 1575.0,
+      "read_throughput_mbps": 4294.32
+    },
+    {
+      "size_mb": 50,
+      "write_ms": 27.65,
+      "read_ms": 13.23,
+      "write_throughput_mbps": 1808.6,
+      "read_throughput_mbps": 3778.64
+    },
+    {
+      "size_mb": 100,
+      "write_ms": 54.1,
+      "read_ms": 24.44,
+      "write_throughput_mbps": 1848.57,
+      "read_throughput_mbps": 4090.82
+    }
+  ],
+  "summary": {
+    "total_tests_run": 12,
+    "average_io_read_throughput_mbps": 3479.38,
+    "average_io_write_throughput_mbps": 1562.36,
+    "peak_memory_test_mb": 299.95
+  }
+}
